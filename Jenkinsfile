@@ -5,8 +5,7 @@ pipeline {
         REGISTRY = 'nexus-service.devops.svc.cluster.local:8081'
         IMAGE_NAME = 'sample-webapp'
         IMAGE_TAG = 'latest'
-        SONARQUBE_URL = 'http://sonarqube-service.devops.svc.cluster
-.local:9000'
+        SONARQUBE_URL = 'http://sonarqube-service.devops.svc.cluster.local:9000'
     }
     stages {
         stage('Prepare Tools') {
@@ -51,8 +50,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh '''
-                    docker
- build -t $REGISTRY/$IMAGE_NAME:$IMAGE_TAG .
+                    docker build -t $REGISTRY/$IMAGE_NAME:$IMAGE_TAG .
                 '''
             }
         }

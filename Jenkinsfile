@@ -14,7 +14,7 @@ pipeline {
         stage('Deploy to K8s') {
             steps {
                 sh '''
-                    kubectl apply -f k8s/sample-deployment.yaml
+                    kubectl apply -f sample-deployment.yaml
                 '''
             }
         }

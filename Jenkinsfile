@@ -1,36 +1,53 @@
 pipeline {
-    agent any
+    agent {
+        kubernetes {
+            yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:latest
+    command:
+    - cat
+    tty: true
+    volumeMounts:
+    - name: docker-config
+      mountPath: /kaniko/.docker
+  - name: python
+    image: python:3.12-slim
+    command:
+    - cat
+    tty: true
+  volumes:
+  - name: docker-config
+    secret:
+      secretName: regcred
+"""
+            defaultContainer 'python'
+        }
+    }
     environment {
-        NEXUS_URL = 'http://nexus-service.devops.svc.cluster.local:8081'
         REGISTRY = 'nexus-service.devops.svc.cluster.local:8081'
         IMAGE_NAME = 'sample-webapp'
         IMAGE_TAG = 'latest'
         SONARQUBE_URL = 'http://sonarqube-service.devops.svc.cluster.local:9000'
     }
     stages {
-        stage('Prepare Tools') {
-            steps {
-                sh '''
-                    set -eux
-                    apt-get update
-                    apt-get install -y python3 python3-pip python3-venv docker.io curl unzip openjdk-21-jre
-                    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-                    export PATH=$JAVA_HOME/bin:$PATH
-                '''
-            }
-        }
         stage('Test') {
             steps {
-                sh '''
-                    set -eux
-                    python3 --version
-                    python3 -m venv .venv
-                    . .venv/bin/activate
-                    python3 -m pip install --upgrade pip
-                    python3 -m pip install -r requirements.txt
-                    python3 -m pip install pytest
-                    pytest test_app.py
-                '''
+                container('python') {
+                    sh '''
+                        set -eux
+                        python3 --version
+                        python3 -m venv .venv
+                        . .venv/bin/activate
+                        python3 -m pip install --upgrade pip
+                        python3 -m pip install -r requirements.txt
+                        python3 -m pip install pytest
+                        pytest test_app.py
+                    '''
+                }
             }
         }
         /*stage('SonarQube Analysis') {
@@ -51,19 +68,14 @@ pipeline {
             }
         }
         */
-        stage('Build Docker Image') {
+        stage('Kaniko Build & Push') {
             steps {
-                sh '''
-                    docker build -t $REGISTRY/$IMAGE_NAME:$IMAGE_TAG .
-                '''
-            }
-        }
-        stage('Push to Nexus') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'nexus-creds', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                container('kaniko') {
                     sh '''
-                        echo $NEXUS_PASS | docker login http://$REGISTRY -u $NEXUS_USER --password-stdin
-                        docker push $REGISTRY/$IMAGE_NAME:$IMAGE_TAG
+                        /kaniko/executor \
+                          --dockerfile=Dockerfile \
+                          --context=/home/jenkins/agent/workspace/$JOB_NAME \
+                          --destination=$REGISTRY/$IMAGE_NAME:$IMAGE_TAG
                     '''
                 }
             }
@@ -85,7 +97,7 @@ pipeline {
             echo 'Build or deployment failed. Check the failed Jenkins stage and console output.'
         }
         always {
-            sh 'docker image prune -f || true'
+            sh 'true'
             deleteDir()
         }
     }

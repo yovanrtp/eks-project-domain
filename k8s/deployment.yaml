@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-webapp
+  labels:
+    app: sample-webapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-webapp
+  template:
+    metadata:
+      labels:
+        app: sample-webapp
+    spec:
+      containers:
+        - name: sample-webapp
+          image: <NEXUS_REGISTRY>/sample-webapp:latest # Replace <NEXUS_REGISTRY>
+          ports:
+            - containerPort: 5000

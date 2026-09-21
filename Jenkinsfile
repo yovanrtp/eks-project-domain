@@ -6,23 +6,11 @@ apiVersion: v1
 kind: Pod
 spec:
   containers:
-  - name: kaniko
-    image: gcr.io/kaniko-project/executor:latest
-    command:
-    - cat
-    tty: true
-    volumeMounts:
-    - name: docker-config
-      mountPath: /kaniko/.docker
   - name: python
     image: python:3.12-slim
     command:
     - cat
     tty: true
-  volumes:
-  - name: docker-config
-    secret:
-      secretName: regcred
 """
             defaultContainer 'python'
         }
@@ -33,8 +21,8 @@ spec:
         IMAGE_TAG = 'latest'
     }
     stages {
-        stage('Test')
- {
+        /*
+        stage('Test') {
             steps {
                 container('python') {
                     sh '''
@@ -62,11 +50,11 @@ spec:
                 }
             }
         }
+        */
         stage('Deploy to K8s') {
             steps {
                 sh '''
-                    sed "s|<NEXUS_REGISTRY>|$REGISTRY|g" k8s/deployment.yaml | kubectl apply -f -
-                    kubectl apply -f k8s/service.yaml
+                    kubectl apply -f k8s/sample-deployment.yaml
                 '''
             }
         }

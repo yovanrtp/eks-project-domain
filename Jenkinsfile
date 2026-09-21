@@ -35,11 +35,11 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_AUTH_TOKEN')]) {
                     sh '''
-                        if ! command -v sonar-scanner > /dev/null 2>&1; then
+                        if [ ! -x sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner ]; then
                             curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
                             unzip sonar-scanner.zip
                         fi
-                        sonar-scanner \
+                        ./sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner \
                           -Dsonar.projectKey=sample-webapp \
                           -Dsonar.sources=. \
                           -Dsonar.host.url=$SONARQUBE_URL \

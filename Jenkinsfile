@@ -33,7 +33,7 @@ pipeline {
         }
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') {
+                withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_AUTH_TOKEN')]) {
                     sh '''
                         if ! command -v sonar-scanner > /dev/null 2>&1; then
                             curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
@@ -62,6 +62,7 @@ pipeline {
                     sh '''
                         echo $NEXUS_PASS | docker login $REGISTRY -u $NEXUS_USER --password-stdin
                         docker push $REGISTRY/$IMAGE_NAME:$IMAGE_TAG
+
                     '''
                 }
             }

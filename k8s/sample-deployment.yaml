@@ -1,34 +1,73 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: gitea-data
+  namespace: jenkins
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-sample
+  name: gitea
+  namespace: jenkins
   labels:
-    app: nginx-sample
+    app: gitea
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: nginx-sample
+      app: gitea
   template:
     metadata:
       labels:
-        app: nginx-sample
+        app: gitea
     spec:
       containers:
-      - name: nginx
-        image: nginx:latest
-        ports:
-        - containerPort: 80
+        - name: gitea
+          image: gitea/gitea:latest
+          ports:
+            - name: http
+              containerPort: 3000
+            - name: ssh
+              containerPort: 22
+          env:
+            - name: USER_UID
+              value: "1000"
+            - name: USER_GID
+              value: "1000"
+          volumeMounts:
+            - name: gitea-data
+              mountPath: /data
+      volumes:
+        - name: gitea-data
+          persistentVolumeClaim:
+            claimName: gitea-data
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: nginx-sample-service
+  name: gitea-service
+  namespace: jenkins
 spec:
   type: NodePort
   selector:
-    app: nginx-sample
+    app: gitea
   ports:
-    - port: 80
-      targetPort: 80
+    - name: http
+      port: 3000
+      targetPort: 3000
       protocol: TCP
+      nodePort: 30080
+
+    - name: ssh
+      port: 22
+      targetPort: 22
+      protocol: TCP
+      nodePort: 30022

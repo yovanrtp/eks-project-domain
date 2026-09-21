@@ -14,6 +14,8 @@ pipeline {
                     set -eux
                     apt-get update
                     apt-get install -y python3 python3-pip python3-venv docker.io curl unzip
+                    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+                    export PATH=$JAVA_HOME/bin:$PATH
                 '''
             }
         }

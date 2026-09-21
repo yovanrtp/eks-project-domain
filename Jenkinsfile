@@ -1,8 +1,8 @@
 pipeline {
     agent any
     environment {
-        NEXUS_URL = 'http://nexus-service.devops.svc.cluster.local:8081'
-        REGISTRY = 'nexus-service.devops.svc.cluster.local:8081'
+        NEXUS_URL = 'http://nexus-service.devops.svc.cluster.local:8082'
+        REGISTRY = 'nexus-service.devops.svc.cluster.local:8082'
         IMAGE_NAME = 'sample-webapp'
         IMAGE_TAG = 'latest'
         SONARQUBE_URL = 'http://sonarqube-service.devops.svc.cluster.local:9000'
@@ -13,7 +13,7 @@ pipeline {
                 sh '''
                     set -eux
                     apt-get update
-                    apt-get install -y python3 python3-pip python3-venv docker.io curl unzip
+                    apt-get install -y python3 python3-pip python3-venv docker.io curl unzip openjdk-21-jre
                     export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
                     export PATH=$JAVA_HOME/bin:$PATH
                 '''
@@ -64,7 +64,6 @@ pipeline {
                     sh '''
                         echo $NEXUS_PASS | docker login $REGISTRY -u $NEXUS_USER --password-stdin
                         docker push $REGISTRY/$IMAGE_NAME:$IMAGE_TAG
-
                     '''
                 }
             }

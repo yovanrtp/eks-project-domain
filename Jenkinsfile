@@ -1,8 +1,8 @@
 pipeline {
     agent any
     environment {
-        NEXUS_URL = 'http://nexus-service.devops.svc.cluster.local:8082'
-        REGISTRY = 'nexus-service.devops.svc.cluster.local:8082'
+        NEXUS_URL = 'http://nexus-service.devops.svc.cluster.local:8081'
+        REGISTRY = 'nexus-service.devops.svc.cluster.local:8081'
         IMAGE_NAME = 'sample-webapp'
         IMAGE_TAG = 'latest'
         SONARQUBE_URL = 'http://sonarqube-service.devops.svc.cluster.local:9000'
